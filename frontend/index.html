@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ingreso - Alquiler</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Ingresá tu DNI</h1>
+    <input type="text" id="dni" placeholder="DNI sin puntos" />
+    <button onclick="ingresar()">Ingresar</button>
+  </div>
+
+  <!-- Tuerca oculta -->
+  <div id="tuerca" class="tuerca">⚙️</div>
+
+  <!-- Modal Admin -->
+  <div id="modalAdmin" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Acceso Administrador</h2>
+      <input type="password" id="adminPass" placeholder="Contraseña" />
+      <button onclick="loginAdmin()">Entrar</button>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- Acceso inquilino ---------- */
+    async function ingresar() {
+      const dni = document.getElementById('dni').value.trim();
+      const res = await fetch(`/api/portal/${dni}`);
+      if (res.ok) {
+        localStorage.setItem('inquilino', await res.text());
+        window.location.href = '/portal.html';
+      } else {
+        alert('DNI no encontrado');
+      }
+    }
+
+    /* ---------- Tuerca Admin (clic largo 3 s) ---------- */
+    let pressTimer;
+    const tuerca = document.getElementById('tuerca');
+    const modalAdmin = document.getElementById('modalAdmin');
+    const closeModal = document.querySelector('.close');
+
+    tuerca.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(() => {
+        modalAdmin.style.display = 'flex';
+      }, 3000);
+    });
+    tuerca.addEventListener('mouseup', () => clearTimeout(pressTimer));
+    tuerca.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+    closeModal.onclick = () => modalAdmin.style.display = 'none';
+    window.onclick = e => { if (e.target === modalAdmin) modalAdmin.style.display = 'none'; };
+
+    /* ---------- Login Admin ---------- */
+    async function loginAdmin() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass === 'admin123') {
+        modalAdmin.style.display = 'none';
+        window.location.href = '/admin.html';
+      } else {
+        alert('Contraseña incorrecta');
+      }
+    }
+  </script>
+</body>
+</html>

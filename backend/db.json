@@ -1,0 +1,24 @@
+{
+  "propiedades": [],
+  "inquilinos": [
+    {
+      "dni": "1",
+      "nombre": "pedro",
+      "email": "pedrolrees@gmail.com",
+      "fechaEntrada": "2025-05-12",
+      "alquilerMensual": "250",
+      "deuda": "",
+      "ultimoPago": "2025-08-18"
+    },
+    {
+      "dni": "133",
+      "nombre": "mario",
+      "email": "merio@gmail.com",
+      "fechaEntrada": "2025-03-01",
+      "alquilerMensual": "300",
+      "deuda": "0",
+      "ultimoPago": "2025-08-18"
+    }
+  ],
+  "notas": "Baño 2 necesita arreglo de grifo."
+}

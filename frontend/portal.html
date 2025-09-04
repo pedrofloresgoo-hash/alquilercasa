@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal de Pago - Alquiler</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>¡Hola <span id="nombre"></span>!</h1>
+
+    <!-- QR -->
+    <h2>Código QR para pagar</h2>
+    <div id="qr"></div>
+
+    <!-- Estado / Calendario -->
+    <h2>Estado de tu cuenta</h2>
+    <div id="calendario"></div>
+  </div>
+
+  <script>
+    /* ---------- Datos del inquilino ---------- */
+    const inquilino = JSON.parse(localStorage.getItem('inquilino'));
+    if (!inquilino) location.href = '/index.html';
+
+    document.getElementById('nombre').textContent = inquilino.nombre;
+
+    /* ---------- Generar QR ---------- */
+    const qrUrl = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${inquilino.dni}_${inquilino.alquilerMensual}`;
+    const qr = qrcode(0, 'M');
+    qr.addData(qrUrl);
+    qr.make();
+    document.getElementById('qr').innerHTML = qr.createImgTag(5);
+
+    /* ---------- Calendario visual ---------- */
+    const hoy = new Date();
+    const ultimoPago = new Date(inquilino.ultimoPago || inquilino.fechaEntrada);
+    const mesesDeuda = (hoy.getFullYear() - ultimoPago.getFullYear()) * 12 +
+                       hoy.getMonth() - ultimoPago.getMonth();
+    const deudaTotal = inquilino.deuda + mesesDeuda * inquilino.alquilerMensual;
+
+    const cal = document.getElementById('calendario');
+    if (deudaTotal > 0) {
+      cal.className = 'rojo';
+      cal.innerHTML = `🔴 Debe <strong>$${deudaTotal}</strong><br>Desde ${ultimoPago.toLocaleDateString()}`;
+    } else {
+      cal.className = 'verde';
+      cal.innerHTML = '✅ Todo al día';
+    }
+  </script>
+</body>
+</html>

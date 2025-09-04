@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel Administrador - Alquiler</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Panel de Administración</h1>
+
+    <!-- Estadísticas -->
+    <section id="stats">
+      <p><strong>Total inquilinos:</strong> <span id="totalInq">0</span></p>
+      <p><strong>Deuda total:</strong> $<span id="deudaTotal">0</span></p>
+    </section>
+
+    <!-- Anotaciones -->
+    <section>
+      <h2>Anotaciones</h2>
+      <textarea id="notas" rows="4" placeholder="Escribí anotaciones sobre la casa..."></textarea>
+      <button onclick="guardarNotas()">Guardar</button>
+    </section>
+
+    <!-- Subir imagen QR -->
+    <section>
+      <h2>Cambiar QR de pago</h2>
+      <form id="qrForm" enctype="multipart/form-data">
+        <input type="file" name="qr" accept="image/*" required />
+        <button type="submit">Subir y aplicar</button>
+      </form>
+      <img id="previewQR" src="/api/qr" alt="QR actual" style="max-width: 200px; margin-top: 1rem;" />
+    </section>
+
+    <!-- Agregar inquilino -->
+    <section>
+      <h2>Agregar inquilino</h2>
+      <form id="formInq">
+        <input name="dni" placeholder="DNI" required />
+        <input name="nombre" placeholder="Nombre" required />
+        <input name="email" type="email" placeholder="Email" required />
+        <input name="fechaEntrada" type="date" required />
+        <input name="alquilerMensual" type="number" placeholder="Alquiler mensual" required />
+        <input name="deuda" type="number" placeholder="Deuda actual" />
+        <input name="ultimoPago" type="date" />
+        <button type="submit">Guardar</button>
+      </form>
+    </section>
+
+    <!-- Lista de inquilinos -->
+    <section>
+      <h2>Inquilinos</h2>
+      <div id="listaInq"></div>
+    </section>
+  </div>
+
+  <script>
+    /* ---------- Cargar datos ---------- */
+    async function cargar() {
+      const res = await fetch('/api/admin');
+      const data = await res.json();
+      document.getElementById('totalInq').textContent = data.totalInq;
+      document.getElementById('deudaTotal').textContent = data.deudaTotal;
+      document.getElementById('notas').value = data.notas || '';
+
+      const lista = document.getElementById('listaInq');
+      lista.innerHTML = '';
+      data.inquilinos.forEach(i => {
+        lista.innerHTML += `
+          <div class="card">
+            <strong>${i.nombre} (${i.dni})</strong> – Deuda: $${i.deuda}
+            <button onclick="eliminarInq('${i.dni}')">🗑️</button>
+          </div>
+        `;
+      });
+    }
+
+    /* ---------- Guardar anotaciones ---------- */
+    async function guardarNotas() {
+      const notas = document.getElementById('notas').value;
+      await fetch('/api/admin/notas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notas })
+      });
+      alert('Notas guardadas');
+    }
+
+    /* ---------- Agregar inquilino ---------- */
+    document.getElementById('formInq').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const body = Object.fromEntries(form.entries());
+      await fetch('/api/admin/inquilino', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      e.target.reset();
+      cargar();
+    });
+
+    /* ---------- Eliminar inquilino ---------- */
+    async function eliminarInq(dni) {
+      await fetch(`/api/admin/inquilino/${dni}`, { method: 'DELETE' });
+      cargar();
+    }
+
+    /* ---------- Subir QR ---------- */
+    document.getElementById('qrForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      await fetch('/api/admin/upload-qr', { method: 'POST', body: form });
+      document.getElementById('previewQR').src = '/api/qr?' + Date.now();
+      alert('QR actualizado');
+    });
+
+    /* ---------- Inicio ---------- */
+    cargar();
+  </script>
+</body>
+</html>
